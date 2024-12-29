@@ -39,7 +39,6 @@ export class UsersService {
 
   findOne(id: string) {
     if (!isValidObjectId(id)) {
-      console.log('valid');
       throw new BadRequestException('Invalid ID format');
     }
     return this.userModel.findById(id);
@@ -49,8 +48,15 @@ export class UsersService {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid ID format');
     }
-    console.log(updateUserDto);
-    return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      updateUserDto,
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new BadRequestException('User not found');
+    }
+    return updatedUser;
   }
 
   async remove(id: string): Promise<{ message: string }> {
