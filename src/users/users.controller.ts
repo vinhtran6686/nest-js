@@ -48,4 +48,14 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+
+  @Post(':id/restore')
+  restore(@Param('id') id: string) {
+    return this.usersService.restore(id);
+  }
+
+  @Post('with-deleted')
+  findAllWithDeleted() {
+    return this.usersService.findAllWithDeleted();
+  }
 }

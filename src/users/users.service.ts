@@ -3,12 +3,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from './schemas/user.schema';
+import { User, UserModel } from './schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 import { isValidObjectId } from 'libs/utils';
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name)
+    private userModel: UserModel,
+  ) {}
 
   async generatePassword(password: string) {
     const salt = await bcrypt.genSalt(10);
@@ -37,6 +40,10 @@ export class UsersService {
     return this.userModel.find();
   }
 
+  async findAllWithDeleted() {
+    return this.userModel.findDeleted();
+  }
+
   findOne(id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid ID format');
@@ -63,7 +70,18 @@ export class UsersService {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid ID format');
     }
-    await this.userModel.findByIdAndRemove(id);
-    return { message: 'User deleted successfully' };
+
+    await this.userModel.softDelete({ _id: id });
+
+    return { message: 'User soft deleted successfully' };
+  }
+
+  async restore(id: string): Promise<User> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid ID format');
+    }
+
+    await this.userModel.restore({ _id: id });
+    return this.findOne(id);
   }
 }
